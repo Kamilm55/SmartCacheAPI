@@ -1,0 +1,47 @@
+﻿version: "3.9"
+
+services:
+  # SQL Server container
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Strong!Passw0rd
+      - MSSQL_PID=Developer
+    ports:
+      # Map SQL Server port 14330 to avoid conflict with local SQL Server
+      - "14330:1433"
+    volumes:
+      - sqlserverdata:/var/opt/mssql
+
+  # Redis container
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "16379:6379"
+    volumes:
+      - redisdata:/data
+
+  # ASP.NET Core Web API container
+  webapi:
+    image: mcr.microsoft.com/dotnet/aspnet:8.0 
+    container_name: smart-cache-webapi
+    ports:
+      - "5000:80"
+    volumes: 
+      - ./app:/app # ./app refers to the app folder in your project root directory (where docker-compose.yml lives).  /app is the container’s internal directory where your .NET app will run.
+    working_dir: /app
+    command: ["dotnet", "SmartCacheManagementSystem.dll"]
+    depends_on: # Start sqlserver and redis before starting webapi
+      - sqlserver
+      - redis
+    environment:
+      # Connection strings pointing to service names and default container ports
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=YourDb;User Id=sa;Password=Strong!Passw0rd;
+      - Redis__Configuration=redis:6379
+
+volumes:
+  sqlserverdata:
+  redisdata:
