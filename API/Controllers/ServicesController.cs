@@ -19,7 +19,7 @@ public sealed class ServicesController : ControllerBase
         _servicesService = servicesService;
     }
 
-    // GET: api/services
+    // GET: api/v1/services
     [HttpGet]
     public async Task<ActionResult<ApiResponse<IEnumerable<ServiceResponse>>>> GetAll()
     {
@@ -27,7 +27,7 @@ public sealed class ServicesController : ControllerBase
         return ApiResponse<IEnumerable<ServiceResponse>>.Ok(serviceResponses);
     }
 
-    // GET: api/services/id
+    // GET: api/v1/services/id
     [HttpGet("{id:int}")]
     public async Task<ActionResult<ApiResponse<ServiceResponse>>> GetById(int id)
     {
@@ -35,7 +35,7 @@ public sealed class ServicesController : ControllerBase
         return ApiResponse<ServiceResponse>.Ok(serviceResponse);
     }
 
-    // POST: api/services
+    // POST: api/v1/services
     [HttpPost]
     public async Task<ActionResult<ApiResponse<ServiceResponse>>> Create(ServiceCreateRequest serviceCreateRequest)
     {
@@ -43,15 +43,15 @@ public sealed class ServicesController : ControllerBase
         return ApiResponse<ServiceResponse>.Created(createdService,nameof(GetById) + new { id = createdService.Id });
     }
 
-    // PUT: api/services/id
+    // PUT: api/v1/services/id
     [HttpPut("{id:int}")]
     public async Task<ActionResult<ApiResponse<ServiceResponse>>> Update(int id, ServiceUpdateRequest serviceUpdateRequest)
     {
         var updatedService = await _servicesService.UpdateAsync(id,serviceUpdateRequest);
-        return ApiResponse<ServiceResponse>.Ok(updatedService,"Updated service location uri: " + nameof(GetById) + new { id = updatedService.Id });
+        return ApiResponse<ServiceResponse>.Ok(updatedService,"Updated service id: " + updatedService.Id);
     }
 
-    // DELETE: api/services/id
+    // DELETE: api/v1/services/id
     [HttpDelete("{id:int}")]
     public async Task<ActionResult<ApiResponse<string>>> Delete(int id)
     {

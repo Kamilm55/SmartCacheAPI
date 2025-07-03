@@ -102,8 +102,6 @@ public abstract class GenericRepository<T> where T : class, new()
         var props = GetMappableProperties().ToList(); // include Id
         var setClause = string.Join(", ", props.Where(p => p.Name != "Id").Select(p => $"{p.Name} = @{p.Name}")); // exclude Id
 
-           // {setClause}-da Id olmamalidi amma Id = @Id burda olmalidi
-
         await using var connection = new SqlConnection(_connectionString);
         await using var command = new SqlCommand(
             $"UPDATE {_tableName} SET {setClause} OUTPUT INSERTED.* WHERE Id = @Id", connection);
@@ -121,19 +119,6 @@ public abstract class GenericRepository<T> where T : class, new()
         if (!await reader.ReadAsync()) return null;
         return entity;
         
-        // var result = new T();
-        // var allProps = GetMappableProperties();
-        //
-        // foreach (var prop in allProps)
-        // {
-        //     if (!reader.HasColumn(prop.Name)) continue;
-        //
-        //     var value = reader[prop.Name];
-        //     if (value != DBNull.Value)
-        //         prop.SetValue(result, Convert.ChangeType(value, Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType));
-        // }
-
-        //return result;
     }
 
     public async Task<bool> DeleteAsync(int id)

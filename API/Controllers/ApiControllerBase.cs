@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace SmartCacheManagementSystem.Controllers;
+namespace SmartCacheManagementSystem.API.Controllers;
 
 [ApiController]
 [Route("api/v1")]

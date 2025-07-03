@@ -11,7 +11,7 @@ public class Category
     public int? ParentId { get; set; }
     public Category? Parent { get; set; }
 
-    public DateTime LastModified { get; set; } = DateTime.UtcNow;
+    public DateTime LastModified { get; set; } 
     public bool IsActive { get; set; } = true;
 
     // Navigation property for child categories

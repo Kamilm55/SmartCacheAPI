@@ -15,7 +15,6 @@ builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(conn
 builder.Services.Configure<RedisOptions>(builder.Configuration.GetSection("Redis"));
 builder.Services.AddSingleton<IRedisCacheService,RedisCacheService>();
 
-
 // --- Service Registrations ---
 builder.Services.AddApplicationServices();
 

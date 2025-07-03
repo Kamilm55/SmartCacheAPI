@@ -1,49 +1,44 @@
+using SmartCacheManagementSystem.Application.Mappers.Interfaces;
 using SmartCacheManagementSystem.Common.DTOs.Requests;
 using SmartCacheManagementSystem.Common.DTOs.Responses;
 using SmartCacheManagementSystem.Common.Exceptions;
 
 namespace SmartCacheManagementSystem.Application.Services;
 
-using SmartCacheManagementSystem.Application.Interfaces;
-using SmartCacheManagementSystem.Domain.Entities;
+using Interfaces;
+using Domain.Entities;
 using SmartCacheManagementSystem.Infrastructure.Repositories.Interfaces;
 
 public class ServicesService : IServicesService
 {
     private readonly IServicesRepository _servicesRepository;
+    private readonly IServiceMapper _serviceMapper;
 
-    public ServicesService(IServicesRepository servicesRepository)
+    public ServicesService(IServicesRepository servicesRepository, IServiceMapper serviceMapper)
     {
         _servicesRepository = servicesRepository;
+        _serviceMapper = serviceMapper;
     }
 
     public async Task<List<ServiceResponse>> GetAllAsync()
     {
         var services = await _servicesRepository.GetAllAsync();
-        return services.Select(MapToResponse).ToList();
+        return services.Select( s => _serviceMapper.ToResponse(s)).ToList();
     }
 
     public async Task<ServiceResponse> GetByIdAsync(int id)
     {
         var service = await _servicesRepository.GetByIdAsync(id)
                ?? throw new NotFoundException(nameof(Service), id);
-        return MapToResponse(service);
+        return _serviceMapper.ToResponse(service);
     }
 
     public async Task<ServiceResponse> CreateAsync(ServiceCreateRequest request)
     {
-        
-        // todo: Map this into entity with autoMapper
-        var service = new Service
-        {
-            Name = request.Name,
-            Price = request.Price,
-            Description = request.Description,
-            IsActive = request.IsActive
-        };
+        var service = _serviceMapper.ToEntity(request);
 
         var created = await _servicesRepository.CreateAsync(service);
-        return MapToResponse(created);
+        return _serviceMapper.ToResponse(created);
     }
 
     public async Task<ServiceResponse> UpdateAsync(int id, ServiceUpdateRequest request)
@@ -51,37 +46,22 @@ public class ServicesService : IServicesService
         var existing = await _servicesRepository.GetByIdAsync(id)
                        ?? throw new NotFoundException(nameof(Service), id);
 
-        // todo: map with mapper
-        existing.Name = request.Name;
-        existing.Price = request.Price;
-        existing.Description = request.Description;
-        existing.IsActive = request.IsActive;
-        existing.LastModified = DateTime.UtcNow;
+        var updatedEntity = _serviceMapper.ToEntity(request,existing); 
+        
+        updatedEntity.LastModified = DateTime.UtcNow;
 
-        var updated = await _servicesRepository.UpdateAsync(existing);
-        return MapToResponse(updated);
+        var updated = await _servicesRepository.UpdateAsync(updatedEntity)
+                                ?? throw new InvalidOperationException("Service cannot update");
+        return _serviceMapper.ToResponse(updated);
     }
 
     public async Task<bool> DeleteAsync(int id)
     {
-        bool isDeleted = await _servicesRepository.DeleteAsync(id);
-        if(!isDeleted){
-            throw new InvalidOperationException($"Service with id:{id} was not deleted");
-        }
+        var existing =  await _servicesRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException(nameof(Service), id);
+        
+        bool isDeleted = await _servicesRepository.DeleteAsync(existing.Id);
         
         return isDeleted;
-    }
-
-    private static ServiceResponse MapToResponse(Service service)
-    {
-        return new ServiceResponse
-        {
-            Id = service.Id,
-            Name = service.Name,
-            Price = service.Price,
-            Description = service.Description,
-            LastModified = service.LastModified,
-            IsActive = service.IsActive
-        };
     }
 }
