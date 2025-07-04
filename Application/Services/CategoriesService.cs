@@ -19,39 +19,61 @@ public class CategoriesService : ICategoriesService
         _categoryMapper = categoryMapper;
     }
 
-    public async Task<List<CategoryResponse>> GetAllAsync()
+    public async Task<List<CategoryResponseWithoutChildren>> GetAllAsync()
     {
         var categories = await _categoriesRepository.GetAllAsync();
 
         return categories.Select(ct => _categoryMapper.ToResponse(ct)).ToList();
     }
 
-    public async Task<CategoryResponse> GetByIdAsync(int id)
+    public async Task<CategoryResponseWithoutChildren> GetByIdAsync(int id)
     {
         var  category = await _categoriesRepository.GetByIdAsync(id)
                         ?? throw new NotFoundException(nameof(Category),id);
         
-        // todo: write mapper for merging with the children
         return _categoryMapper.ToResponse(category);
     }
-
-    public async Task<CategoryResponse> CreateAsync(CategoryCreateRequest categoryCreateRequest)
+    
+    // Include all children
+    public async Task<CategoryResponse> GetByIdWithChildrenAsync(int id)
     {
-        var category =  _categoryMapper.ToEntity(categoryCreateRequest);
-
-        // todo: consider FK for join if not exist with parent id exception then join children in dto
-        var created = await _categoriesRepository.CreateAsync(category);
+        var  category = await _categoriesRepository.GetByIdAsync(id)
+                        ?? throw new NotFoundException(nameof(Category),id);
         
+        var childrenTree = await _categoriesRepository.GetChildrenTreeAsync(category.Id);
+        
+        return _categoryMapper.ToResponse(category, childrenTree, new HashSet<int>());
+
+    }
+
+    public async Task<CategoryResponseWithoutChildren> CreateAsync(CategoryCreateRequest request)
+    {
+        if (request.ParentId is not null)
+        {
+            var existingParent = await _categoriesRepository.GetByIdAsync((int)request.ParentId)
+                            ?? throw new NotFoundException(nameof(Category) +" not found with parentId:" + (int) request.ParentId);
+        }
+
+        var category =  _categoryMapper.ToEntity(request);
+        
+        var created = await _categoriesRepository.CreateAsync(category);
         return _categoryMapper.ToResponse(created);
     }
 
-    public async Task<CategoryResponse> UpdateAsync(int id, CategoryUpdateRequest categoryUpdateRequest)
+    public async Task<CategoryResponseWithoutChildren> UpdateAsync(int id, CategoryUpdateRequest request)
     {
+        // Update parentId is not required now for PUT method
+        // if (request.ParentId is not null)
+        // {
+        //     var existingParent = await _categoriesRepository.GetByIdAsync((int)request.ParentId)
+        //                          ?? throw new NotFoundException(nameof(Category) + " not found with parentId:" + (int) request.ParentId);
+        //     // if(existingParent.Id == id)
+        //     //     throw new InvalidOperationException("Cannot update category ");
+        // }
         var existing = await _categoriesRepository.GetByIdAsync(id)
                         ?? throw new NotFoundException(nameof(Category),id);
         
-        var category = _categoryMapper.ToEntity(existing, categoryUpdateRequest);
-        // todo: consider FK for join if not exist with parent id exception then join children in dto
+        var category = _categoryMapper.ToEntity(existing, request);
 
         category.LastModified = DateTime.UtcNow;
         var updatedCategory = await _categoriesRepository.UpdateAsync(category)
@@ -65,6 +87,14 @@ public class CategoriesService : ICategoriesService
         var existing = await _categoriesRepository.GetByIdAsync(id)
                        ?? throw new NotFoundException(nameof(Category),id);
 
+        var hasChildren = await _categoriesRepository.HasChildrenAsync(existing.Id);
+        
+        if (hasChildren)
+        {
+            throw new InvalidOperationException("Category that has children cannot delete");
+        }
+
         await _categoriesRepository.DeleteAsync(existing.Id);
     }
+
 }

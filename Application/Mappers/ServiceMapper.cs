@@ -9,7 +9,6 @@ public class ServiceMapper : IServiceMapper
 {
     public ServiceResponse ToResponse(Service service)
     {
-        if (service == null) return null!;
 
         return new ServiceResponse
         {
@@ -24,7 +23,6 @@ public class ServiceMapper : IServiceMapper
 
     public Service ToEntity(ServiceCreateRequest request)
     {
-        if (request == null) return null!;
 
         return new Service
         {
@@ -37,8 +35,6 @@ public class ServiceMapper : IServiceMapper
 
     public Service ToEntity(ServiceUpdateRequest request, Service entity)
     {
-        if (request == null || entity == null) return null;
-
         entity.Name = request.Name;
         entity.Price = request.Price;
         entity.Description = request.Description;

@@ -9,6 +9,7 @@ public interface ICategoriesRepository
     Task<Category> CreateAsync(Category category);
     Task<Category?> UpdateAsync(Category category);
     Task<bool> DeleteAsync(int id);
-    
-    Task<List<Category>> GetChildrenAsync(int parentId);
+
+    Task<List<Category>> GetChildrenTreeAsync(int parentId, HashSet<int>? visited = null);
+    Task<bool> HasChildrenAsync(int id);
 }

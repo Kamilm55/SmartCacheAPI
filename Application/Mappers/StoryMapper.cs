@@ -9,8 +9,6 @@ public class StoryMapper : IStoryMapper
 {
     public StoryResponse ToResponse(Story story)
     {
-        if (story == null) return null!;
-
         return new StoryResponse
         {
             Id = story.Id,
@@ -24,8 +22,6 @@ public class StoryMapper : IStoryMapper
 
     public Story ToEntity(StoryCreateRequest request)
     {
-        if (request == null) return null!;
-
         return new Story
         {
             Title = request.Title,
@@ -37,8 +33,6 @@ public class StoryMapper : IStoryMapper
 
     public Story ToEntity(StoryUpdateRequest request, Story entity)
     {
-        if (request == null || entity == null) return null;
-
         entity.Title = request.Title;
         entity.Content = request.Content;
         entity.IsPublished = request.IsPublished;

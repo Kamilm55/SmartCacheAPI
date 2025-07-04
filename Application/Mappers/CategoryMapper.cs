@@ -8,40 +8,58 @@ namespace SmartCacheManagementSystem.Application.Mappers;
 public class CategoryMapper : ICategoryMapper
 {
  
-    public CategoryResponse ToResponse(Category category)
+    public CategoryResponse ToResponse(Category category, List<Category> allDescendants, HashSet<int>? visited = null)
     {
-        if (category == null) return null!;
-            
+        visited ??= new HashSet<int>();
+
+        if (visited.Contains(category.Id))
+            return null!; 
+
+        visited.Add(category.Id);
+
         return new CategoryResponse
         {
             Id = category.Id,
             Name = category.Name,
             ParentId = category.ParentId,
-            LastModified = category.LastModified,
+            LastModified = category.LastModified ?? DateTime.UtcNow,
             IsActive = category.IsActive,
-            Children = category.Children?.Select(ToResponse).ToList()
+            Children = allDescendants
+                .Where(c => c.ParentId == category.Id)
+                .Select(c => ToResponse(c, allDescendants, visited))
+                .Where(c => c != null) // Skip nulls
+                .ToList()
+        };
+    }
+
+    public CategoryResponseWithoutChildren ToResponse(Category category)
+    {
+        return new CategoryResponseWithoutChildren
+        {
+            Id = category.Id,
+            Name = category.Name,
+            ParentId = category.ParentId,
+            LastModified = category.LastModified,
+            IsActive = category.IsActive
         };
     }
 
     public Category ToEntity(CategoryCreateRequest createRequest)
     {
-        if (createRequest == null) return null!;
-            
         return new Category
         {
             Name = createRequest.Name,
             ParentId = createRequest.ParentId,
-            IsActive = createRequest.IsActive
+            IsActive = createRequest.IsActive,
+            LastModified = null
         };
     }
 
     public Category ToEntity(Category category, CategoryUpdateRequest updateRequest)
     {
-        if (category == null || updateRequest == null) return null;
-
         category.Name = updateRequest.Name;
-        category.ParentId = updateRequest.ParentId;
         category.IsActive = updateRequest.IsActive;
+        category.LastModified = null;
         
         return category;
     }

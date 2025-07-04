@@ -8,8 +8,8 @@ using System.Reflection;
 
 public abstract class GenericRepository<T> where T : class, new()
 {
-    private readonly string _connectionString;
-    private readonly string _tableName;
+    protected readonly string _connectionString;
+    protected readonly string _tableName;
 
     public GenericRepository(IConfiguration configuration, string tableName)
     {

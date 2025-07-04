@@ -5,9 +5,11 @@ namespace SmartCacheManagementSystem.Application.Interfaces;
 
 public interface ICategoriesService
 {
-    Task<List<CategoryResponse>> GetAllAsync();
-    Task<CategoryResponse> GetByIdAsync(int id);
-    Task<CategoryResponse> CreateAsync(CategoryCreateRequest categoryCreateRequest);
-    Task<CategoryResponse> UpdateAsync(int id, CategoryUpdateRequest categoryUpdateRequest);
+    Task<List<CategoryResponseWithoutChildren>> GetAllAsync();
+    Task<CategoryResponseWithoutChildren> GetByIdAsync(int id);
+    Task<CategoryResponseWithoutChildren> CreateAsync(CategoryCreateRequest categoryCreateRequest);
+    Task<CategoryResponseWithoutChildren> UpdateAsync(int id, CategoryUpdateRequest categoryUpdateRequest);
     Task DeleteAsync(int id);
+    
+    Task<CategoryResponse> GetByIdWithChildrenAsync(int id);
 }

@@ -6,7 +6,8 @@ namespace SmartCacheManagementSystem.Application.Mappers.Interfaces;
 
 public interface ICategoryMapper
 {
-    CategoryResponse ToResponse(Category category);
+    CategoryResponse ToResponse(Category category, List<Category> allDescendants, HashSet<int>? visited = null);
+    CategoryResponseWithoutChildren ToResponse(Category category);
     Category ToEntity(CategoryCreateRequest createRequest);
     Category ToEntity(Category category, CategoryUpdateRequest updateRequest);
 }
