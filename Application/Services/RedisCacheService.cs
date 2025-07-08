@@ -34,7 +34,7 @@ public class RedisCacheService : IRedisCacheService
         await _redis.KeyDeleteAsync(key); 
     }
 
-    public async Task SetCacheAsync(string categoriesData, int createdId, Category created)
+    public async Task SetCacheAsync<T>(string categoriesData, int createdId, T created)
     {
         await SetCacheAsync(categoriesData + ":" + createdId, created);
     }

@@ -1,4 +1,5 @@
 using SmartCacheManagementSystem.Application.Interfaces;
+using SmartCacheManagementSystem.Application.Interfaces.Factory;
 using SmartCacheManagementSystem.Application.Mappers.Interfaces;
 using SmartCacheManagementSystem.Common.DTOs.Requests.Category;
 using SmartCacheManagementSystem.Common.DTOs.Responses;
@@ -11,62 +12,48 @@ namespace SmartCacheManagementSystem.Application.Services;
 
 public class CategoriesService : ICategoriesService
 {
-    private readonly ICategoriesRepository _categoriesRepository;
+    private readonly ICategoriesRepository _repository;
     private readonly ICategoryMapper _categoryMapper;
-    private readonly IRedisCacheService _redisCacheService;
-
-    public CategoriesService(ICategoriesRepository categoriesRepository, ICategoryMapper categoryMapper, IRedisCacheService redisCacheService)
+    private readonly IGenericEntityCacheService<Category> _commonCacheService;
+    public CategoriesService(
+        ICategoriesRepository repository,
+        ICategoryMapper categoryMapper,
+        IRedisCacheService redisCacheService,
+        IGenericEntityCacheServiceFactory cacheServiceFactory)
     {
-        _categoriesRepository = categoriesRepository;
+        _repository = repository;
         _categoryMapper = categoryMapper;
-        _redisCacheService = redisCacheService;
+        _commonCacheService = cacheServiceFactory.Create<Category>(
+            CacheKeys.CATEGORIES_DATA,
+            CacheKeys.CATEGORIES_LASTMODIFIED
+        );
     }
 
     public async Task<CategoryListResponse> GetAllAndLastModifiedAsync()
     {
         // If categories data exist in cache fetch from cache otherwise from db
-        List<Category>? categories = await _redisCacheService.GetCacheAsync<List<Category>>(CacheKeys.CATEGORIES_DATA);
-
-        if (categories == null)
-        {
-            categories = await _categoriesRepository.GetAllAsync();
-            await _redisCacheService.SetCacheAsync(CacheKeys.CATEGORIES_DATA, categories);
-        }
+        var categories = await _commonCacheService.GetOrSetListEntityCacheAsync(() => _repository.GetAllAsync());
 
         var categoryResponseList = categories.Select(ct => _categoryMapper.ToResponse(ct)).ToList();
-        
-        DateTime? lastModified = await _redisCacheService.GetCacheAsync<DateTime?>(CacheKeys.CATEGORIES_LASTMODIFIED);
-        
-        return _categoryMapper.ToListResponse(categoryResponseList,lastModified);
+
+        DateTime? lastModified = await _commonCacheService.GetLastModifiedAsync();
+
+        return _categoryMapper.ToListResponse(categoryResponseList, lastModified);
     }
 
     public async Task<CategoryResponseWithoutChildren> GetByIdAsync(int id)
     {
-        Category? category;
-        category = await _redisCacheService.GetCacheAsync<Category>(CacheKeys.CATEGORIES_DATA,id);
-        if (category == null)
-        {
-            category = await _categoriesRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException(nameof(Category), id);
-            await _redisCacheService.SetCacheAsync(CacheKeys.CATEGORIES_DATA,category.Id, category);
-        }
-        
+        // If exists in cache fetch,otherwise fetch from db and set to cache
+        var category = await _commonCacheService.GetOrSetSingleEntityCacheAsync(id, () => _repository.GetByIdAsync(id));
         return _categoryMapper.ToResponse(category);
     }
-    
+
     // Include all children
     public async Task<CategoryResponse> GetByIdWithChildrenAsync(int id)
     {
-        Category? category;
-        category = await _redisCacheService.GetCacheAsync<Category>(CacheKeys.CATEGORIES_DATA,id);
-        if (category == null)
-        {
-            category = await _categoriesRepository.GetByIdAsync(id)
-                       ?? throw new NotFoundException(nameof(Category), id);
-            await _redisCacheService.SetCacheAsync(CacheKeys.CATEGORIES_DATA,category.Id, category);
-        }
-        var childrenTree = await _categoriesRepository.GetChildrenTreeAsync(category.Id);
-        
+        var category = await _commonCacheService.GetOrSetSingleEntityCacheAsync(id, () => _repository.GetByIdAsync(id));
+        var childrenTree = await _repository.GetChildrenTreeAsync(category.Id);
+
         return _categoryMapper.ToResponse(category, childrenTree, new HashSet<int>());
     }
 
@@ -75,19 +62,10 @@ public class CategoriesService : ICategoriesService
         await EnsureParentExistsIfNeededAsync(request.ParentId);
 
         var category = _categoryMapper.ToEntity(request);
-        var created = await _categoriesRepository.CreateCategoryWithStoredProcedureAsync(category);
+        var created = await _repository.CreateCategoryWithStoredProcedureAsync(category);
 
-        List<Category>? categories;
-        // If cache is not null add created to cache,also change lastModified -> User can fetch from cache 
-        if ((categories = await _redisCacheService.GetCacheAsync<List<Category>>(CacheKeys.CATEGORIES_DATA)) != null)
-        {
-            categories.Add(created);
-            await _redisCacheService.SetCacheAsync(CacheKeys.CATEGORIES_DATA,categories);
-            await _redisCacheService.SetCacheAsync(CacheKeys.CATEGORIES_LASTMODIFIED, DateTime.UtcNow);
-        }
-        // Set cache for id
-        await _redisCacheService.SetCacheAsync(CacheKeys.CATEGORIES_DATA,created.Id, created);
-                
+        await _commonCacheService.UpdateCacheAfterCreateAsync(created,created.Id);
+
         return _categoryMapper.ToResponse(created);
     }
 
@@ -96,73 +74,104 @@ public class CategoriesService : ICategoriesService
         await EnsureParentExistsIfNeededAsync(request.ParentId);
 
         var category = _categoryMapper.ToEntity(request);
-        var created = await _categoriesRepository.CreateAsync(category);
-        
-        List<Category>? categories;
-        // If cache is not null add created to cache,but don't change lastModified -> User can fetch from cache 
-        if ((categories = await _redisCacheService.GetCacheAsync<List<Category>>(CacheKeys.CATEGORIES_DATA)) != null)
-        {
-            categories.Add(created);
-            await _redisCacheService.SetCacheAsync(CacheKeys.CATEGORIES_DATA,categories);
-        }
-        
-        // Set cache for id
-        await _redisCacheService.SetCacheAsync(CacheKeys.CATEGORIES_DATA,created.Id, created);
+        var created = await _repository.CreateAsync(category);
+
+        await _commonCacheService.UpdateCacheAfterCreateAsync(created,created.Id);
 
         return _categoryMapper.ToResponse(created);
     }
-
-    private async Task EnsureParentExistsIfNeededAsync(int? parentId)
-    {
-        if (parentId == null) return;
-
-        var existingParent = await _categoriesRepository.GetByIdAsync(parentId.Value);
-        if (existingParent == null)
-        {
-            throw new NotFoundException(nameof(Category) +  $"not found with parentId: {parentId.Value}");
-        }
-    }
-
-
+    
     public async Task<CategoryResponseWithoutChildren> UpdateAsync(int id, CategoryUpdateRequest request)
     {
-        // Update parentId is not required now for PUT method
-        var existing = await _categoriesRepository.GetByIdAsync(id)
-                        ?? throw new NotFoundException(nameof(Category),id);
-        
-        var category = _categoryMapper.ToEntity(existing, request);
+        var existing = await _repository.GetByIdAsync(id)
+                        ?? throw new NotFoundException(nameof(Category), id);
 
+        var category = _categoryMapper.ToEntity(existing, request);
         category.LastModified = DateTime.UtcNow; // lastModified field of an instance
-        var updatedCategory = await _categoriesRepository.UpdateAsync(category)
+
+        var updatedCategory = await _repository.UpdateAsync(category)
                                 ?? throw new InvalidOperationException("Category cannot update");
-        
+
         // Instead of iterating and update cache we change lastModified and client fetch from db next time
-        await _redisCacheService.DeleteCacheAsync(CacheKeys.CATEGORIES_DATA);
-        await _redisCacheService.SetCacheAsync(CacheKeys.CATEGORIES_LASTMODIFIED, DateTime.UtcNow);
-        
-        // Set cache for id
-        await _redisCacheService.SetCacheAsync(CacheKeys.CATEGORIES_DATA,updatedCategory.Id, updatedCategory);
+        await _commonCacheService.InvalidateCacheAsync();
+        await _commonCacheService.SetSingleEntityCacheAsync(updatedCategory.Id,updatedCategory);
         
         return _categoryMapper.ToResponse(updatedCategory);
     }
 
     public async Task DeleteAsync(int id)
     {
-        var existing = await _categoriesRepository.GetByIdAsync(id)
-                       ?? throw new NotFoundException(nameof(Category),id);
+        var existing = await _repository.GetByIdAsync(id)
+                       ?? throw new NotFoundException(nameof(Category), id);
 
-        var hasChildren = await _categoriesRepository.HasChildrenAsync(existing.Id);
-        
+        var hasChildren = await _repository.HasChildrenAsync(existing.Id);
+
         if (hasChildren)
         {
             throw new InvalidOperationException("Category that has children cannot delete");
         }
-        
-        // Instead of iterating and delete cache we change lastModified and client fetch from db next time
-        await _redisCacheService.DeleteCacheAsync(CacheKeys.CATEGORIES_DATA);
-        await _redisCacheService.SetCacheAsync(CacheKeys.CATEGORIES_LASTMODIFIED, DateTime.UtcNow);
 
-        await _redisCacheService.DeleteCacheAsync(CacheKeys.CATEGORIES_DATA,existing.Id);
-        await _categoriesRepository.DeleteAsync(existing.Id);
+        // Instead of iterating and delete cache we change lastModified and client fetch from db next time
+        await _commonCacheService.InvalidateCacheAsync();
+        await _repository.DeleteAsync(existing.Id);
+        await _commonCacheService.DeleteKeyWithIdAsync(existing.Id);
     }
+
+    private async Task EnsureParentExistsIfNeededAsync(int? parentId)
+    {
+        if (parentId == null) return;
+
+        var existingParent = await _repository.GetByIdAsync(parentId.Value);
+        if (existingParent == null)
+        {
+            throw new NotFoundException(nameof(Category) + $" not found with parentId: {parentId.Value}");
+        }
+    }
+
+    // private async Task<List<Category>> GetOrSetListCacheAsync()
+    // {
+    //     var categories = await _redisCacheService.GetCacheAsync<List<Category>>(CacheKeys.CATEGORIES_DATA);
+    //
+    //     if (categories == null)
+    //     {
+    //         categories = await _categoriesRepository.GetAllAsync();
+    //         await _redisCacheService.SetCacheAsync(CacheKeys.CATEGORIES_DATA, categories);
+    //     }
+    //
+    //     return categories;
+    // }
+    //
+    // private async Task<Category> GetOrSetEntityCacheAsync(int id)
+    // {
+    //     var category = await _redisCacheService.GetCacheAsync<Category>(CacheKeys.CATEGORIES_DATA, id);
+    //     if (category == null)
+    //     {
+    //         category = await _categoriesRepository.GetByIdAsync(id)
+    //                     ?? throw new NotFoundException(nameof(Category), id);
+    //         await _redisCacheService.SetCacheAsync(CacheKeys.CATEGORIES_DATA, category.Id, category);
+    //     }
+    //
+    //     return category;
+    // }
+    //
+    // private async Task UpdateCacheAfterCreateAsync(Category created)
+    // {
+    //     var categories = await _redisCacheService.GetCacheAsync<List<Category>>(CacheKeys.CATEGORIES_DATA);
+    //     if (categories != null)
+    //     {
+    //         categories.Add(created);
+    //         await _redisCacheService.SetCacheAsync(CacheKeys.CATEGORIES_DATA, categories);
+    //     }
+    //     // Change lastModified after every modify
+    //     await _redisCacheService.SetCacheAsync(CacheKeys.CATEGORIES_LASTMODIFIED, DateTime.UtcNow);
+    //     
+    //     // Set cache for id
+    //     await _redisCacheService.SetCacheAsync(CacheKeys.CATEGORIES_DATA, created.Id, created);
+    // }
+    //
+    // private async Task InvalidateCacheAsync()
+    // {
+    //     await _redisCacheService.DeleteCacheAsync(CacheKeys.CATEGORIES_DATA);
+    //     await _redisCacheService.SetCacheAsync(CacheKeys.CATEGORIES_LASTMODIFIED, DateTime.UtcNow);
+    // }
 }

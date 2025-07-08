@@ -5,7 +5,7 @@ using SmartCacheManagementSystem.Infrastructure.Repositories.Interfaces;
 
 namespace SmartCacheManagementSystem.Infrastructure.Repositories;
 
-public class CategoriesRepository : GenericRepository<Category>, ICategoriesRepository
+public class CategoriesRepository : GenericRepository<Category>, ICategoriesRepository,IGenericRepository<Category>
 {
     public CategoriesRepository(IConfiguration configuration) : base(configuration, "Categories")
     {

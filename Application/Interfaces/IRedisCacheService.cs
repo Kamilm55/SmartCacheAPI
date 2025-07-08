@@ -11,7 +11,7 @@ public interface IRedisCacheService
     Task DeleteCacheAsync(string key);
     // Task SetChecksumAsync(string key, string checksum);
     // Task<string?> GetChecksumAsync(string key);
-    Task SetCacheAsync(string categoriesData, int createdId, Category created);
+    Task SetCacheAsync<T>(string categoriesData, int createdId, T created);
     Task<T?> GetCacheAsync<T>(string categoriesData, int id);
     Task DeleteCacheAsync(string categoriesData, int existingId);
 }

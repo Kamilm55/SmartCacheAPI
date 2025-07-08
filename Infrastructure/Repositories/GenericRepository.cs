@@ -1,4 +1,6 @@
+using SmartCacheManagementSystem.Domain.Entities;
 using SmartCacheManagementSystem.Extensions;
+using SmartCacheManagementSystem.Infrastructure.Repositories.Interfaces;
 
 namespace SmartCacheManagementSystem.Infrastructure.Repositories;
 

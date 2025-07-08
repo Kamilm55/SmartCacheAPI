@@ -1,7 +1,9 @@
 using SmartCacheManagementSystem.Application.Interfaces;
+using SmartCacheManagementSystem.Application.Interfaces.Factory;
 using SmartCacheManagementSystem.Application.Mappers;
 using SmartCacheManagementSystem.Application.Mappers.Interfaces;
 using SmartCacheManagementSystem.Application.Services;
+using SmartCacheManagementSystem.Application.Services.Common;
 using SmartCacheManagementSystem.Infrastructure.Repositories;
 using SmartCacheManagementSystem.Infrastructure.Repositories.Interfaces;
 using StackExchange.Redis;
@@ -16,6 +18,9 @@ public static class ApplicationServicesExtensions
         services.AddScoped<IServicesService, ServicesService>();
         services.AddScoped<ICategoriesService, CategoriesService>();
         services.AddScoped<IStoriesService,StoriesService>();
+        services.AddScoped<IGenericEntityCacheServiceFactory, GenericEntityCacheServiceFactory>();
+
+        //services.AddScoped(typeof(IGenericEntityCacheService<>), typeof(GenericEntityCacheService<>));
 
         // var redis = ConnectionMultiplexer.Connect("localhost"); 
         // services.AddSingleton<IConnectionMultiplexer>(redis);
