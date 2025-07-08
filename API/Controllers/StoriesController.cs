@@ -19,10 +19,10 @@ public sealed class StoriesController : ControllerBase
 
     // GET: api/v1/stories
     [HttpGet]
-    public async Task<ActionResult<ApiResponse<IEnumerable<StoryResponse>>>> GetAll()
+    public async Task<ActionResult<ApiResponse<StoryListResponse>>> GetAll()
     {
         var storyResponses = await _storiesService.GetAllAsync();
-        return ApiResponse<IEnumerable<StoryResponse>>.Ok(storyResponses);
+        return ApiResponse<StoryListResponse>.Ok(storyResponses);
     }
 
     // GET: api/v1/stories/id

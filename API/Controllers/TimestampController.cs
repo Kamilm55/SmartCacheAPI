@@ -1,4 +1,5 @@
-/*using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
+using SmartCacheManagementSystem.Application.Interfaces;
 using SmartCacheManagementSystem.Application.Mappers.Interfaces;
 using SmartCacheManagementSystem.Common;
 using SmartCacheManagementSystem.Common.DTOs.Requests;
@@ -8,20 +9,20 @@ namespace SmartCacheManagementSystem.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public sealed class ChecksumController : ApiControllerBase
+public sealed class TimestampController : ApiControllerBase
 {
-    private readonly IChecksumService _checksumService;
+    private readonly ITimestampService _timestampService;
 
-    public ChecksumController(IChecksumService checksumService)
+    public TimestampController(ITimestampService timestampService)
     {
-        _checksumService = checksumService;
+        _timestampService = timestampService;
     }
 
-    [HttpPost("checksum/categories/verify")]
-    public async Task<ActionResult<ApiResponse<ChecksumResponse>>> VerifyCategoriesChecksum([FromBody] string checksum)
+    [HttpPost("/verify")]
+    public async Task<ActionResult<ApiResponse<TimestampResponse>>> VerifyChanges([FromBody] TimestampRequest request)
     {
-        var currentChecksum = await _checksumService.GetChecksumAsync(checksum);
-        return ApiResponse<ChecksumResponse>.Ok(currentChecksum);
+        var currentChecksum = await _timestampService.VerifyChanges(request);
+        return ApiResponse<TimestampResponse>.Ok(currentChecksum);
     }
 
-}*/
+}

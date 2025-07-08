@@ -40,4 +40,13 @@ public class StoryMapper : IStoryMapper
         
         return entity;
     }
+
+    public StoryListResponse ToListResponse(List<StoryResponse> storyResponses, DateTime? lastModified)
+    {
+        return new StoryListResponse()
+        {
+            StoryList = storyResponses,
+            LastModified = lastModified
+        };
+    }
 }

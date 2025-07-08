@@ -5,9 +5,9 @@ namespace SmartCacheManagementSystem.Application.Interfaces;
 
 public interface IServicesService
 {
-    Task<List<ServiceResponse>> GetAllAsync();
+    Task<ServiceListResponse> GetAllAsync();
     Task<ServiceResponse> GetByIdAsync(int id);
     Task<ServiceResponse> CreateAsync(ServiceCreateRequest request);
     Task<ServiceResponse> UpdateAsync(int id, ServiceUpdateRequest request);
-    Task<bool> DeleteAsync(int id);
+    Task DeleteAsync(int id);
 }

@@ -9,4 +9,5 @@ public interface IStoryMapper
     StoryResponse ToResponse(Story story);
     Story ToEntity(StoryCreateRequest request);
     Story ToEntity(StoryUpdateRequest request, Story entity);
+    StoryListResponse ToListResponse(List<StoryResponse> storyResponses, DateTime? lastModified);
 }

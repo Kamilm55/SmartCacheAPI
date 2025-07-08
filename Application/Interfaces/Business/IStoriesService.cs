@@ -5,9 +5,9 @@ namespace SmartCacheManagementSystem.Application.Interfaces;
 
 public interface IStoriesService
 {
-    Task<List<StoryResponse>> GetAllAsync();
+    Task<StoryListResponse> GetAllAsync();
     Task<StoryResponse> GetByIdAsync(int id);
     Task<StoryResponse> CreateAsync(StoryCreateRequest request);
     Task<StoryResponse> UpdateAsync(int id, StoryUpdateRequest request);
-    Task<bool> DeleteAsync(int id);
+    Task DeleteAsync(int id);
 }

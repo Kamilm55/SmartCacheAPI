@@ -13,7 +13,8 @@ public class RedisCacheService : IRedisCacheService
     public RedisCacheService(IConnectionMultiplexer redis)
     {
         _redis = redis.GetDatabase();
-        _ttl = TimeSpan.FromMinutes(15);
+       _ttl = TimeSpan.FromMinutes(15);
+        // _ttl = TimeSpan.FromSeconds(10); // for testing 
     }
 
     public async Task SetCacheAsync<T>(string key, T data)

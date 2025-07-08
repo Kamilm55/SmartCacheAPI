@@ -18,7 +18,6 @@ public class CategoriesService : ICategoriesService
     public CategoriesService(
         ICategoriesRepository repository,
         ICategoryMapper categoryMapper,
-        IRedisCacheService redisCacheService,
         IGenericEntityCacheServiceFactory cacheServiceFactory)
     {
         _repository = repository;
@@ -83,27 +82,25 @@ public class CategoriesService : ICategoriesService
     
     public async Task<CategoryResponseWithoutChildren> UpdateAsync(int id, CategoryUpdateRequest request)
     {
-        var existing = await _repository.GetByIdAsync(id)
-                        ?? throw new NotFoundException(nameof(Category), id);
+        var existing = await _commonCacheService.GetOrSetSingleEntityCacheAsync(id,() => _repository.GetByIdAsync(id));
 
         var category = _categoryMapper.ToEntity(existing, request);
         category.LastModified = DateTime.UtcNow; // lastModified field of an instance
 
-        var updatedCategory = await _repository.UpdateAsync(category)
-                                ?? throw new InvalidOperationException("Category cannot update");
+        var updated = await _repository.UpdateAsync(category)
+                      ?? throw new InvalidOperationException("Category cannot update");
 
         // Instead of iterating and update cache we change lastModified and client fetch from db next time
         await _commonCacheService.InvalidateCacheAsync();
-        await _commonCacheService.SetSingleEntityCacheAsync(updatedCategory.Id,updatedCategory);
+        await _commonCacheService.SetSingleEntityCacheAsync(updated.Id,updated);
         
-        return _categoryMapper.ToResponse(updatedCategory);
+        return _categoryMapper.ToResponse(updated);
     }
 
     public async Task DeleteAsync(int id)
     {
-        var existing = await _repository.GetByIdAsync(id)
-                       ?? throw new NotFoundException(nameof(Category), id);
-
+        var existing = await _commonCacheService.GetOrSetSingleEntityCacheAsync(id,() => _repository.GetByIdAsync(id));
+        
         var hasChildren = await _repository.HasChildrenAsync(existing.Id);
 
         if (hasChildren)
@@ -127,51 +124,4 @@ public class CategoriesService : ICategoriesService
             throw new NotFoundException(nameof(Category) + $" not found with parentId: {parentId.Value}");
         }
     }
-
-    // private async Task<List<Category>> GetOrSetListCacheAsync()
-    // {
-    //     var categories = await _redisCacheService.GetCacheAsync<List<Category>>(CacheKeys.CATEGORIES_DATA);
-    //
-    //     if (categories == null)
-    //     {
-    //         categories = await _categoriesRepository.GetAllAsync();
-    //         await _redisCacheService.SetCacheAsync(CacheKeys.CATEGORIES_DATA, categories);
-    //     }
-    //
-    //     return categories;
-    // }
-    //
-    // private async Task<Category> GetOrSetEntityCacheAsync(int id)
-    // {
-    //     var category = await _redisCacheService.GetCacheAsync<Category>(CacheKeys.CATEGORIES_DATA, id);
-    //     if (category == null)
-    //     {
-    //         category = await _categoriesRepository.GetByIdAsync(id)
-    //                     ?? throw new NotFoundException(nameof(Category), id);
-    //         await _redisCacheService.SetCacheAsync(CacheKeys.CATEGORIES_DATA, category.Id, category);
-    //     }
-    //
-    //     return category;
-    // }
-    //
-    // private async Task UpdateCacheAfterCreateAsync(Category created)
-    // {
-    //     var categories = await _redisCacheService.GetCacheAsync<List<Category>>(CacheKeys.CATEGORIES_DATA);
-    //     if (categories != null)
-    //     {
-    //         categories.Add(created);
-    //         await _redisCacheService.SetCacheAsync(CacheKeys.CATEGORIES_DATA, categories);
-    //     }
-    //     // Change lastModified after every modify
-    //     await _redisCacheService.SetCacheAsync(CacheKeys.CATEGORIES_LASTMODIFIED, DateTime.UtcNow);
-    //     
-    //     // Set cache for id
-    //     await _redisCacheService.SetCacheAsync(CacheKeys.CATEGORIES_DATA, created.Id, created);
-    // }
-    //
-    // private async Task InvalidateCacheAsync()
-    // {
-    //     await _redisCacheService.DeleteCacheAsync(CacheKeys.CATEGORIES_DATA);
-    //     await _redisCacheService.SetCacheAsync(CacheKeys.CATEGORIES_LASTMODIFIED, DateTime.UtcNow);
-    // }
 }

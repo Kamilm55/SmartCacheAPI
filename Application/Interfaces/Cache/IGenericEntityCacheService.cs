@@ -1,5 +1,3 @@
-using SmartCacheManagementSystem.Infrastructure.Repositories.Interfaces;
-
 namespace SmartCacheManagementSystem.Application.Interfaces;
 
 public interface IGenericEntityCacheService<T> where T : class

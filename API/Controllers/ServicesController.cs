@@ -21,10 +21,10 @@ public sealed class ServicesController : ControllerBase
 
     // GET: api/v1/services
     [HttpGet]
-    public async Task<ActionResult<ApiResponse<IEnumerable<ServiceResponse>>>> GetAll()
+    public async Task<ActionResult<ApiResponse<ServiceListResponse>>> GetAll()
     {
         var serviceResponses = await _servicesService.GetAllAsync();
-        return ApiResponse<IEnumerable<ServiceResponse>>.Ok(serviceResponses);
+        return ApiResponse<ServiceListResponse>.Ok(serviceResponses);
     }
 
     // GET: api/v1/services/id

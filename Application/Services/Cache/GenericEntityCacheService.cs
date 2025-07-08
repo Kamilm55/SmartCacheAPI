@@ -32,6 +32,7 @@ public class GenericEntityCacheService<T> : IGenericEntityCacheService<T> where 
         return list;
     }
 
+    // // Fetch from cache with id, if not exist fetch from db and set to cache
     public async Task<T> GetOrSetSingleEntityCacheAsync(int id, Func<Task<T?>> fetchFromDb)
     {
         var entity = await _cache.GetCacheAsync<T>(_cacheKey, id);
@@ -50,10 +51,10 @@ public class GenericEntityCacheService<T> : IGenericEntityCacheService<T> where 
         if (list != null)
         {
             list.Add(entity);
-            await _cache.SetCacheAsync(_cacheKey, list);
+            await _cache.SetCacheAsync(_cacheKey, list);// add new item to cache instead of clearing cache
         }
 
-        await _cache.SetCacheAsync(_cacheKey, id, entity);
+        await _cache.SetCacheAsync(_cacheKey, id, entity); // set cache for specific id
         await _cache.SetCacheAsync(_lastModifiedKey, DateTime.UtcNow);
     }
 

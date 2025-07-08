@@ -42,4 +42,13 @@ public class ServiceMapper : IServiceMapper
         
         return entity;
     }
+
+    public ServiceListResponse ToListResponse(List<ServiceResponse> serviceList, DateTime? lastModified)
+    {
+        return new ServiceListResponse()
+        {
+            ServiceList = serviceList,
+            LastModified = lastModified
+        };
+    }
 }

@@ -18,8 +18,11 @@ public static class ApplicationServicesExtensions
         services.AddScoped<IServicesService, ServicesService>();
         services.AddScoped<ICategoriesService, CategoriesService>();
         services.AddScoped<IStoriesService,StoriesService>();
+        services.AddScoped<ITimestampService, TimestampService>();
+        
         services.AddScoped<IGenericEntityCacheServiceFactory, GenericEntityCacheServiceFactory>();
 
+        
         //services.AddScoped(typeof(IGenericEntityCacheService<>), typeof(GenericEntityCacheService<>));
 
         // var redis = ConnectionMultiplexer.Connect("localhost"); 

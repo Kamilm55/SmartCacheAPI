@@ -9,4 +9,5 @@ public interface IServiceMapper
     ServiceResponse ToResponse(Service service);
     Service ToEntity(ServiceCreateRequest request);
     Service ToEntity(ServiceUpdateRequest request, Service entity);
+    ServiceListResponse ToListResponse(List<ServiceResponse> serviceList, DateTime? lastModified);
 }
