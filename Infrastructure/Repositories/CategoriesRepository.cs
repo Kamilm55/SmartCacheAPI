@@ -1,3 +1,4 @@
+using System.Data;
 using Microsoft.Data.SqlClient;
 using SmartCacheManagementSystem.Domain.Entities;
 using SmartCacheManagementSystem.Infrastructure.Repositories.Interfaces;
@@ -69,7 +70,6 @@ public class CategoriesRepository : GenericRepository<Category>, ICategoriesRepo
         return categories;
     }
     
-    // todo: write this and create method as Function in migration up
     public async Task<bool> HasChildrenAsync(int id)
     {
         await using var connection = new SqlConnection(_connectionString);
@@ -82,4 +82,33 @@ public class CategoriesRepository : GenericRepository<Category>, ICategoriesRepo
         return result != null;
     }
 
+    public async Task<Category> CreateCategoryWithStoredProcedureAsync(Category category)
+    {
+        await using var connection = new SqlConnection(_connectionString);
+        await using var command = new SqlCommand("sp_CreateCategories", connection)
+        {
+            CommandType = CommandType.StoredProcedure
+        };
+
+        // Input parameters
+        command.Parameters.AddWithValue("@Name", category.Name);
+        command.Parameters.AddWithValue("@IsActive", category.IsActive);
+        command.Parameters.AddWithValue("@ParentId", (object?)category.ParentId ?? DBNull.Value);
+
+        // Output parameter for Id
+        var idParam = new SqlParameter("@Id", SqlDbType.Int)
+        {
+            Direction = ParameterDirection.Output
+        };
+        command.Parameters.Add(idParam);
+
+        await connection.OpenAsync();
+        await command.ExecuteNonQueryAsync();
+
+        // Set the output Id to the object
+        category.Id = (int)idParam.Value;
+        category.LastModified = null; // Because DB sets it to NULL
+
+        return category;
+    }
 }

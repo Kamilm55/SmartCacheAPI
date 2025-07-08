@@ -22,7 +22,7 @@ public class CategoryMapper : ICategoryMapper
             Id = category.Id,
             Name = category.Name,
             ParentId = category.ParentId,
-            LastModified = category.LastModified ?? DateTime.UtcNow,
+            LastModified = category.LastModified ?? null,
             IsActive = category.IsActive,
             Children = allDescendants
                 .Where(c => c.ParentId == category.Id)
@@ -62,5 +62,15 @@ public class CategoryMapper : ICategoryMapper
         category.LastModified = null;
         
         return category;
+    }
+
+    public CategoryListResponse ToListResponse(List<CategoryResponseWithoutChildren> categoryList,
+        DateTime? lastModified)
+    {
+       return new CategoryListResponse()
+        {
+            CategoryList = categoryList,
+            LastModified = lastModified
+        };
     }
 }

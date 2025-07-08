@@ -19,10 +19,10 @@ public sealed class CategoriesController : ControllerBase
 
     // GET: api/v1/categories
     [HttpGet]
-    public async Task<ActionResult<ApiResponse<IEnumerable<CategoryResponseWithoutChildren>>>> GetAll()
+    public async Task<ActionResult<ApiResponse<CategoryListResponse>>> GetAll()
     {
-        var categoryResponses = await _categoriesService.GetAllAsync();
-        return ApiResponse<IEnumerable<CategoryResponseWithoutChildren>>.Ok(categoryResponses);
+        var categoryResponses = await _categoriesService.GetAllAndLastModifiedAsync();
+        return ApiResponse<CategoryListResponse>.Ok(categoryResponses);
     }
     
     // GET: api/v1/categories/id/tree
@@ -45,7 +45,7 @@ public sealed class CategoriesController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<ApiResponse<CategoryResponseWithoutChildren>>> Create(CategoryCreateRequest categoryCreateRequest)
     {
-        var createdCategory = await _categoriesService.CreateAsync(categoryCreateRequest);
+        var createdCategory = await _categoriesService.CreateWithStoredProcedureAsync(categoryCreateRequest);
         return ApiResponse<CategoryResponseWithoutChildren>.Created(createdCategory, nameof(GetById) + new { id = createdCategory.Id });
     }
 

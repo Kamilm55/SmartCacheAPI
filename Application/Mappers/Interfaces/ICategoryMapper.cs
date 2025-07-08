@@ -10,4 +10,5 @@ public interface ICategoryMapper
     CategoryResponseWithoutChildren ToResponse(Category category);
     Category ToEntity(CategoryCreateRequest createRequest);
     Category ToEntity(Category category, CategoryUpdateRequest updateRequest);
+    CategoryListResponse ToListResponse(List<CategoryResponseWithoutChildren> categoryList, DateTime? lastModified);
 }
