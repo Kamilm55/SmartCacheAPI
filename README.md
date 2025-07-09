@@ -189,5 +189,3 @@ This system demonstrates:
 - Real-world production readiness
 
 ✅ Ideal for large-scale mobile backends that require real-time sync without constant polling.
-
----
