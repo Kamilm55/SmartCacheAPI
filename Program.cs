@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using SmartCacheManagementSystem.Application.Interfaces;
 using SmartCacheManagementSystem.Application.Services;
+using SmartCacheManagementSystem.Application.Services.Cache;
 using SmartCacheManagementSystem.Extensions;
 using SmartCacheManagementSystem.Infrastructure.Configuration;
 using SmartCacheManagementSystem.Infrastructure.Persistance;
@@ -24,7 +25,10 @@ builder.Services.AddApplicationServices();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SupportNonNullableReferenceTypes();
+});
 
 var app = builder.Build();
 

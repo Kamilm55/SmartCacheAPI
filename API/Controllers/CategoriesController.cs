@@ -7,7 +7,7 @@ using SmartCacheManagementSystem.Common.DTOs.Responses;
 namespace SmartCacheManagementSystem.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/v1/[controller]")]
 public sealed class CategoriesController : ControllerBase
 {
     private readonly ICategoriesService _categoriesService;

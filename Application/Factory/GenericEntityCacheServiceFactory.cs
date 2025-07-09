@@ -1,6 +1,8 @@
-using SmartCacheManagementSystem.Application.Services.Common;
+using SmartCacheManagementSystem.Application.Interfaces;
+using SmartCacheManagementSystem.Application.Interfaces.Factory;
+using SmartCacheManagementSystem.Application.Services.Cache;
 
-namespace SmartCacheManagementSystem.Application.Interfaces.Factory;
+namespace SmartCacheManagementSystem.Application.Factory;
 
 public class GenericEntityCacheServiceFactory : IGenericEntityCacheServiceFactory
 {

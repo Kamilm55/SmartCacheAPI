@@ -1,7 +1,7 @@
 using SmartCacheManagementSystem.Application.Interfaces;
 using SmartCacheManagementSystem.Common.Exceptions;
 
-namespace SmartCacheManagementSystem.Application.Services.Common;
+namespace SmartCacheManagementSystem.Application.Services.Cache;
 
 public class GenericEntityCacheService<T> : IGenericEntityCacheService<T> where T : class
 {
@@ -32,7 +32,7 @@ public class GenericEntityCacheService<T> : IGenericEntityCacheService<T> where 
         return list;
     }
 
-    // // Fetch from cache with id, if not exist fetch from db and set to cache
+    // Fetch from cache with id, if not exist fetch from db and set to cache
     public async Task<T> GetOrSetSingleEntityCacheAsync(int id, Func<Task<T?>> fetchFromDb)
     {
         var entity = await _cache.GetCacheAsync<T>(_cacheKey, id);

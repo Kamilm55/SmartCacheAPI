@@ -1,8 +1,13 @@
-namespace SmartCacheManagementSystem.Common.DTOs.Requests;
+using Swashbuckle.AspNetCore.Annotations;
 
 public class TimestampRequest
 {
-    public DateTime? CategoryTimestamp { get; set; }
-    public DateTime? StoryTimestamp { get; set; }
-    public DateTime? ServiceTimestamp { get; set; }
+    [SwaggerSchema(Nullable = true, Description = "Category last modified timestamp")]
+    public DateTime? CategoryTimestamp { get; set; } = null;
+    
+    [SwaggerSchema(Nullable = true, Description = "Story last modified timestamp")]
+    public DateTime? StoryTimestamp { get; set; } = null;
+    
+    [SwaggerSchema(Nullable = true, Description = "Service last modified timestamp")]
+    public DateTime? ServiceTimestamp { get; set; } = null;
 }

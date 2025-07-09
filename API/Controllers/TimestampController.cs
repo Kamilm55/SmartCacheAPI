@@ -8,8 +8,8 @@ using SmartCacheManagementSystem.Common.DTOs.Responses;
 namespace SmartCacheManagementSystem.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
-public sealed class TimestampController : ApiControllerBase
+[Route("api/v1/[controller]")]
+public sealed class TimestampController : ControllerBase
 {
     private readonly ITimestampService _timestampService;
 
@@ -18,7 +18,7 @@ public sealed class TimestampController : ApiControllerBase
         _timestampService = timestampService;
     }
 
-    [HttpPost("/verify")]
+    [HttpPost("verify")]
     public async Task<ActionResult<ApiResponse<TimestampResponse>>> VerifyChanges([FromBody] TimestampRequest request)
     {
         var currentChecksum = await _timestampService.VerifyChanges(request);

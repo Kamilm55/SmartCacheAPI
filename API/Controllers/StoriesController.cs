@@ -7,7 +7,7 @@ using SmartCacheManagementSystem.Common.DTOs.Responses;
 namespace SmartCacheManagementSystem.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/v1/[controller]")]
 public sealed class StoriesController : ControllerBase
 {
     private readonly IStoriesService _storiesService;

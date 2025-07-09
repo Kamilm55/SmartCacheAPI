@@ -1,15 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using SmartCacheManagementSystem.Application.Interfaces;
 using SmartCacheManagementSystem.Common;
 using SmartCacheManagementSystem.Common.DTOs.Requests;
 using SmartCacheManagementSystem.Common.DTOs.Responses;
-using SmartCacheManagementSystem.Domain.Entities;
 
-namespace SmartCacheManagementSystem.Controllers;
+namespace SmartCacheManagementSystem.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/v1/[controller]")]
 public sealed class ServicesController : ControllerBase
 {
     private readonly IServicesService _servicesService;
