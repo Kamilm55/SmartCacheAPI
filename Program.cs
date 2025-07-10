@@ -1,9 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using SmartCacheManagementSystem.Application.Interfaces;
-using SmartCacheManagementSystem.Application.Services;
 using SmartCacheManagementSystem.Application.Services.Cache;
 using SmartCacheManagementSystem.Extensions;
-using SmartCacheManagementSystem.Infrastructure.Configuration;
 using SmartCacheManagementSystem.Infrastructure.Persistance;
 using StackExchange.Redis;
 
