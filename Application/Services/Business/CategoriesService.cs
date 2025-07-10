@@ -8,7 +8,7 @@ using SmartCacheManagementSystem.Common.Utils;
 using SmartCacheManagementSystem.Domain.Entities;
 using SmartCacheManagementSystem.Infrastructure.Repositories.Interfaces;
 
-namespace SmartCacheManagementSystem.Application.Services;
+namespace SmartCacheManagementSystem.Application.Services.Business;
 
 public class CategoriesService : ICategoriesService
 {

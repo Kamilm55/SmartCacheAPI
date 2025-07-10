@@ -1,14 +1,13 @@
-using Microsoft.Extensions.Logging;
+using SmartCacheManagementSystem.Application.Interfaces;
 using SmartCacheManagementSystem.Application.Interfaces.Factory;
 using SmartCacheManagementSystem.Application.Mappers.Interfaces;
 using SmartCacheManagementSystem.Common.DTOs.Requests;
 using SmartCacheManagementSystem.Common.DTOs.Responses;
 using SmartCacheManagementSystem.Common.Utils;
-using SmartCacheManagementSystem.Application.Interfaces;
 using SmartCacheManagementSystem.Domain.Entities;
 using SmartCacheManagementSystem.Infrastructure.Repositories.Interfaces;
 
-namespace SmartCacheManagementSystem.Application.Services;
+namespace SmartCacheManagementSystem.Application.Services.Business;
 
 public class ServicesService : IServicesService
 {
